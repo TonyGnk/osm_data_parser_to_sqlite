@@ -1,13 +1,9 @@
-import actions.connectRoads.connectTheRoads
-import parser.ParserType
 import parser.osmParser
 import parser.parseOsmForCoordinates
 import java.io.File
 
-/*
-    SCRIPT
-    1. Create the tables
- */
+var nodesOut = 0
+var nodesIn = 0
 
 fun main() {
 
@@ -21,25 +17,19 @@ fun main() {
     // 1. Create the tables
     createTables(dbPath)
 
+    val start = System.currentTimeMillis()
+    osmParser(osmPath = osmPath, dbPath = dbPath)
+    val end = System.currentTimeMillis()
+    println("Time spent: ${end - start} ms\n")
 
-    osmParser(osmPath = osmPath, dbPath = dbPath, type = ParserType.ROADS)
+    print("Nodes in: $nodesIn,")
+    println(" out: $nodesOut")
+    //Percent
+    println("Percent: ${nodesOut.toDouble() / nodesIn * 100}%")
 
-    connectTheRoads(dbPath)
+    //connectTheRoads(dbPath)
 
-    osmParser(osmPath = osmPath, dbPath = dbPath, type = ParserType.OTHER)
-
-    //val start = System.currentTimeMillis()
+    //osmParser(osmPath = osmPath, dbPath = dbPath, type = ParserType.OTHER)
 
     parseOsmForCoordinates(osmPath, dbPath)
-
-    // val end = System.currentTimeMillis()
-    //  println("Time spent in osmParserForCoordinates: ${end - start} ms")
-
-
-//    val manualEnableCleanEmptyNodes = true
-//    val cleanEmptyNodes = if (manualEnableCleanEmptyNodes) true else {
-//        println("Do you want to clean nodes that are not used? (y/n)")
-//        readlnOrNull() == "y"
-//    }
-//    if (cleanEmptyNodes) cleanEmptyNodesAction(dbPath)
 }

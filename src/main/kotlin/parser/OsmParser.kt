@@ -11,30 +11,43 @@ import parser.nodes.handleSinglePoint
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.PreparedStatement
+import java.sql.SQLException
 
-fun osmParser(
-    osmPath: String, dbPath: String, type: ParserType,
-) {
-    print("Inserting $type...")
+fun osmParser(osmPath: String, dbPath: String) {
+    print("Parsing...")
     val sql: Connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
     sql.autoCommit = false
+
+    //Statements
+    val insertPlaceStmt = sql.prepareStatement(
+        "INSERT INTO places " +
+                "(entity_id, el_name, en_name, el_address, en_address, address_number, category, is_singe_point) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    )
+    val insertRoadStmt = sql.prepareStatement(
+        "INSERT INTO roads (way_id, el_Name, en_Name) VALUES (?, ?, ?)"
+    )
+    val insertWayNodeStmt = sql.prepareStatement(
+        "INSERT INTO way_nodes (way_id, node_id, sequence) VALUES (?, ?, ?)"
+    )
 
     val reader = XmlReader(File(osmPath), false, CompressionMethod.None)
 
     val sink = object : Sink {
         override fun process(entityContainer: EntityContainer) {
-            val entity = entityContainer.entity
+            when (val entity = entityContainer.entity) {
+                is Node -> handleSinglePoint(
+                    insertPlaceStmt = insertPlaceStmt,
+                    node = entity
+                )
 
-            when (type) {
-                ParserType.OTHER -> when (entity) {
-                    is Node -> handleSinglePoint(sql, entity)
-                    is Way -> insertRoadOrMultiPointPlace(sql, entity, placeSelected = true)
-                }
-
-                ParserType.ROADS -> when (entity) {
-                    is Way -> insertRoadOrMultiPointPlace(sql, entity, placeSelected = false)
-                }
-
+                is Way -> insertRoadOrMultiPointPlace(
+                    insertPlaceStmt = insertPlaceStmt,
+                    insertRoadStmt = insertRoadStmt,
+                    insertWayNodeStmt = insertWayNodeStmt,
+                    way = entity
+                )
             }
         }
 
@@ -47,13 +60,19 @@ fun osmParser(
     reader.setSink(sink)
     reader.run()
 
+    insertPlaceStmt.executeBatch()
+    insertPlaceStmt.close()
+
+    insertRoadStmt.executeBatch()
+    insertRoadStmt.close()
+
+    insertWayNodeStmt.executeBatch()
+    insertWayNodeStmt.close()
+
     sql.commit()
     sql.autoCommit = true
-    sql.createStatement().execute("VACUUM")
+    // sql.createStatement().execute("VACUUM")
     sql.close()
 
     println("Done")
 }
-
-
-enum class ParserType { ROADS, OTHER }

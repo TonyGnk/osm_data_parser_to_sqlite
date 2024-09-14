@@ -19,7 +19,7 @@ fun createTables(dbFilePath: String) {
     statement.executeUpdate(
         """
         CREATE TABLE way_nodes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             way_id INTEGER NOT NULL,
             node_id INTEGER NOT NULL,
             sequence INTEGER NOT NULL,
@@ -43,13 +43,14 @@ fun createTables(dbFilePath: String) {
     statement.executeUpdate(
         """
         CREATE TABLE places (
-            entity_id INTEGER NOT NULL,
+            entity_id INTEGER PRIMARY KEY NOT NULL,
             el_name TEXT,
             en_name TEXT,
-            way_id INTEGER,
-            address_number TEXT,
-            category TEXT NOT NULL,
-            is_singe_point BOOLEAN NOT NULL
+            el_address TEXT,
+            en_address TEXT,
+            address_number INTEGER,
+            category TEXT,
+            is_singe_point INTEGER NOT NULL
         )
     """
     )

@@ -1,7 +1,6 @@
 package parser.way
 
 import utils.findTagWithName
-import insert.insertWays
 import org.openstreetmap.osmosis.core.domain.v0_6.Way
 import java.sql.Connection
 
@@ -11,8 +10,11 @@ data class SuburbIdWithCoordinates(
     val lon: Double,
 )
 
-fun handleRoads(sql: Connection, way: Way) {
-
+fun handleRoads(
+    insertRoadStmt: java.sql.PreparedStatement,
+    insertWayNodeStmt: java.sql.PreparedStatement,
+    way: Way
+) {
     val elName = way.tags.findTagWithName(listOf("name:el", "name"))
     val enName = way.tags.findTagWithName(listOf("name:en", "int_name"))
 
@@ -20,31 +22,41 @@ fun handleRoads(sql: Connection, way: Way) {
 
     if (notEmptyNames) {
         insertRoads(
-            sql = sql,
+            insertRoadStmt = insertRoadStmt,
             id = way.id,
             elName = elName,
             enName = enName,
         )
-        insertWays(sql, way)
+        insertWays(
+            insertWayNodeStmt = insertWayNodeStmt,
+            way = way
+        )
     }
 }
 
 
 private fun insertRoads(
-    sql: Connection,
+    insertRoadStmt: java.sql.PreparedStatement,
     id: Long,
     elName: String,
     enName: String,
 ) {
-    val insertSuburb = sql.prepareStatement(
-        "INSERT INTO roads (way_id, el_Name, en_Name) VALUES (?, ?, ?)"
-    )
+    insertRoadStmt.setLong(1, id)
+    insertRoadStmt.setString(2, elName)
+    insertRoadStmt.setString(3, enName)
 
-    insertSuburb.setLong(1, id)
-    insertSuburb.setString(2, elName)
-    insertSuburb.setString(3, enName)
+    insertRoadStmt.addBatch()
+}
 
-    insertSuburb.addBatch()
-    insertSuburb.executeBatch()
-    insertSuburb.close()
+
+fun insertWays(
+    insertWayNodeStmt: java.sql.PreparedStatement,
+    way: Way
+) {
+    way.wayNodes.forEachIndexed { index, wayNode ->
+        insertWayNodeStmt.setLong(1, way.id)
+        insertWayNodeStmt.setLong(2, wayNode.nodeId)
+        insertWayNodeStmt.setInt(3, index)
+        insertWayNodeStmt.addBatch()
+    }
 }

@@ -26,11 +26,6 @@ fun parseOsmForCoordinates(osmPath: String, dbPath: String) {
 private fun collectRequiredNodeIds(connection: Connection): MutableSet<Long> {
     val nodeIds = mutableSetOf<Long>()
     connection.createStatement().use { statement ->
-        statement.executeQuery("SELECT id FROM nodes").use { resultSet ->
-            while (resultSet.next()) {
-                nodeIds.add(resultSet.getLong("id"))
-            }
-        }
         statement.executeQuery("SELECT node_id FROM way_nodes").use { resultSet ->
             while (resultSet.next()) {
                 nodeIds.add(resultSet.getLong("node_id"))

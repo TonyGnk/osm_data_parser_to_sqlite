@@ -5,16 +5,27 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way
 import java.sql.Connection
 
 fun insertRoadOrMultiPointPlace(
-    sql: Connection,
+    insertPlaceStmt: java.sql.PreparedStatement,
+    insertRoadStmt: java.sql.PreparedStatement,
+    insertWayNodeStmt: java.sql.PreparedStatement,
     way: Way,
-    placeSelected: Boolean,
 ) {
+    if (way.tags.isEmpty()) return
 
     val category = way.tags.findTagWithName(listOf("highway"))
     val isRoad = category.isNotBlank()
 
     when (isRoad) {
-        true -> if (!placeSelected) handleRoads(sql, way)
-        false -> if (placeSelected) handleMultiPoint(sql, way)
+        true -> handleRoads(
+            insertRoadStmt = insertRoadStmt,
+            insertWayNodeStmt = insertWayNodeStmt,
+            way = way
+        )
+
+        false -> handleMultiPoint(
+            insertPlaceStmt = insertPlaceStmt,
+            insertWayNodeStmt = insertWayNodeStmt,
+            way = way
+        )
     }
 }
