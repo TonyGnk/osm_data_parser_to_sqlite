@@ -8,22 +8,12 @@ fun createTables(dbFilePath: String) {
 
     statement.executeUpdate(
         """
-        CREATE TABLE nodes (
-            id INTEGER PRIMARY KEY NOT NULL,
-            latitude INTEGER NOT NULL,
-            longitude INTEGER NOT NULL
-        )
-    """
-    )
-
-    statement.executeUpdate(
-        """
         CREATE TABLE way_nodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             way_id INTEGER NOT NULL,
-            node_id INTEGER NOT NULL,
-            sequence INTEGER NOT NULL,
-            FOREIGN KEY (node_id) REFERENCES nodes(id)
+            latitude INTEGER NOT NULL,
+            longitude INTEGER NOT NULL,
+            sequence INTEGER NOT NULL
         )
     """
     )
@@ -38,19 +28,30 @@ fun createTables(dbFilePath: String) {
     """
     )
 
-
-    // Create places table
     statement.executeUpdate(
         """
-        CREATE TABLE places (
-            entity_id INTEGER PRIMARY KEY NOT NULL,
+        CREATE TABLE places_single (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             el_name TEXT,
             en_name TEXT,
-            el_address TEXT,
-            en_address TEXT,
             address_number INTEGER,
-            category TEXT,
-            is_singe_point INTEGER NOT NULL
+            road_id INTEGER,
+            latitude INTEGER NOT NULL,
+            longitude INTEGER NOT NULL,
+            category INTEGER NOT NULL
+        )
+    """
+    )
+
+    statement.executeUpdate(
+        """
+        CREATE TABLE places_multi (
+            way_id INTEGER PRIMARY KEY NOT NULL,
+            el_name TEXT,
+            en_name TEXT,
+            address_number INTEGER,
+            road_id INTEGER,
+            category INTEGER NOT NULL
         )
     """
     )
@@ -60,3 +61,51 @@ fun createTables(dbFilePath: String) {
     sql.autoCommit = true
     sql.close()
 }
+
+
+val globalRoadParts: MutableList<RoadPart> = mutableListOf()
+val globalPlaceSingles: MutableList<PlaceSingle> = mutableListOf()
+val globalPlacesMulti: MutableList<PlaceMulti> = mutableListOf()
+val globalRoadConnected: MutableList<RoadPart> = mutableListOf()
+val nodes: MutableMap<Long, Pair<Double, Double>> = mutableMapOf()
+
+
+data class RoadPart(
+    val wayId: Long,
+    val elName: String?,
+    val enName: String?,
+    val wayNodes: Set<WayNode>,
+)
+
+data class PlaceSingle(
+    val elName: String?,
+    val enName: String?,
+    val elAddress: String?,
+    val enAddress: String?,
+    val addressNumber: Int?,
+    var wayId: Long? = null,
+    val nodeId: Long,
+    val latitude: Double,
+    val longitude: Double,
+    val category: Int,
+)
+
+data class PlaceMulti(
+    val wayId: Long,
+    val elName: String?,
+    val enName: String?,
+    val elAddress: String?,
+    val enAddress: String?,
+    val addressNumber: Int?,
+    var roadWayId: Long? = null,
+    val wayNodes: Set<WayNode>,
+    val category: Int,
+)
+
+data class WayNode(
+    val wayId: Long,
+    val nodeId: Long,
+    val sequence: Int,
+    var latitude: Double,
+    var longitude: Double,
+)

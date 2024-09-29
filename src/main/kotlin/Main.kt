@@ -1,35 +1,46 @@
-import parser.osmParser
+import actions.connectRoads.connectTheRoads
+import actions.getTheIdOfTheRoadL
+import parser.insertNodeInRoads
+import parser.insertNodePlaces
 import parser.parseOsmForCoordinates
+import parser.parseOsmL
 import java.io.File
-
-var nodesOut = 0
-var nodesIn = 0
 
 fun main() {
 
-    val osmName = "allMap3"
+    val osmName = "mapFirstKoinotita" //"mapFirstKoinotita"
 
     val osmPath = "src/main/resources/$osmName.osm"
     val dbPath = "output/${osmName}.sqlite"
     if (File(dbPath).exists()) File(dbPath).delete()
 
-
     // 1. Create the tables
     createTables(dbPath)
 
     val start = System.currentTimeMillis()
-    osmParser(osmPath = osmPath, dbPath = dbPath)
+    parseOsmL(osmPath = osmPath)
     val end = System.currentTimeMillis()
     println("Time spent: ${end - start} ms\n")
 
-    print("Nodes in: $nodesIn,")
-    println(" out: $nodesOut")
-    //Percent
-    println("Percent: ${nodesOut.toDouble() / nodesIn * 100}%")
+    val start2 = System.currentTimeMillis()
+    parseOsmForCoordinates(osmPath)
+    val end2 = System.currentTimeMillis()
+    println("Time spent: ${end2 - start2} ms\n")
 
-    //connectTheRoads(dbPath)
 
-    //osmParser(osmPath = osmPath, dbPath = dbPath, type = ParserType.OTHER)
+    val start3 = System.currentTimeMillis()
+    getTheIdOfTheRoadL()
+    val end3 = System.currentTimeMillis()
+    println("Time spent: ${end3 - start3} ms\n")
 
-    parseOsmForCoordinates(osmPath, dbPath)
+    val start4 = System.currentTimeMillis()
+    connectTheRoads()
+    val end4 = System.currentTimeMillis()
+    println("Time spent: ${end4 - start4} ms\n")
+
+    insertNodePlaces()
+    insertNodeInRoads()
+
+
+    saveToDB(dbPath)
 }

@@ -1,59 +1,103 @@
 package parser
 
+import globalPlaceSingles
+import globalPlacesMulti
+import globalRoadConnected
+import globalRoadParts
+import nodes
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer
 import org.openstreetmap.osmosis.core.domain.v0_6.Node
 import org.openstreetmap.osmosis.core.task.v0_6.Sink
 import org.openstreetmap.osmosis.xml.common.CompressionMethod
 import org.openstreetmap.osmosis.xml.v0_6.XmlReader
 import java.io.File
-import java.sql.Connection
-import java.sql.DriverManager
 import java.util.Locale
 
-fun parseOsmForCoordinates(osmPath: String, dbPath: String) {
+//private val nodes: MutableSet<Triple<Long, Double, Double>> = mutableSetOf()
+
+fun parseOsmForCoordinates(osmPath: String) {
     print("Inserting nodes...")
-    DriverManager.getConnection("jdbc:sqlite:$dbPath").use { connection ->
-        connection.autoCommit = false
 
-        val requiredNodeIds = collectRequiredNodeIds(connection)
-        processOsmFile(osmPath, connection, requiredNodeIds)
+    val reader = XmlReader(File(osmPath), false, CompressionMethod.None)
+    val multiPlaceSet = globalPlacesMulti.map {
+        it.wayNodes.map { wayNode -> wayNode.nodeId }
+    }.flatten().toSet()
+    val roadSet = globalRoadParts.map {
+        it.wayNodes.map { wayNode -> wayNode.nodeId }
+    }.flatten().toSet()
 
-        connection.commit()
-    }
+    //val existingNodes = singlePlaceSet.union(multiPlaceSet).union(roadSet)
+    val sink = createOsmSink(multiPlaceSet, roadSet)
+
+//    insertNodeInRoads()
+//    insertNodePlaces()
+
+    reader.setSink(sink)
+    reader.run()
     println("Done")
 }
 
-private fun collectRequiredNodeIds(connection: Connection): MutableSet<Long> {
-    val nodeIds = mutableSetOf<Long>()
-    connection.createStatement().use { statement ->
-        statement.executeQuery("SELECT node_id FROM way_nodes").use { resultSet ->
-            while (resultSet.next()) {
-                nodeIds.add(resultSet.getLong("node_id"))
-            }
-        }
-    }
-    return nodeIds
-}
-
-private fun processOsmFile(
-    osmFilePath: String,
-    connection: Connection,
-    requiredNodeIds: MutableSet<Long>
-) {
-    val reader = XmlReader(File(osmFilePath), false, CompressionMethod.None)
-    val sink = createOsmSink(connection, requiredNodeIds)
-    reader.setSink(sink)
-    reader.run()
-}
-
-private fun createOsmSink(connection: Connection, requiredNodeIds: MutableSet<Long>): Sink {
+private fun createOsmSink(
+    multiPlaceSet: Set<Long>,
+    roadSet: Set<Long>
+): Sink {
     return object : Sink {
         override fun process(entityContainer: EntityContainer) {
-            val entity = entityContainer.entity
-            if (entity is Node && entity.id in requiredNodeIds) {
-                insertNode(connection, entity)
-                requiredNodeIds.remove(entity.id)
+            when (val entity = entityContainer.entity) {
+                is Node -> {
+                    //If node belongs to set 1 do x1, if belong to set 2 do x2 ...etc
+                    when (entity.id) {
+                        in multiPlaceSet -> {
+                            nodes[entity.id] = Pair(
+                                roundToFiveDecimals(entity.latitude),
+                                roundToFiveDecimals(entity.longitude)
+                            )
+//                            nodes.add(
+//                                Triple(
+//                                    entity.id,
+//                                    roundToFiveDecimals(entity.latitude),
+//                                    roundToFiveDecimals(entity.longitude)
+//                                )
+//                            )
+//                            globalPlacesMulti.forEach { place ->
+//                                place.wayNodes.forEach { wayNode ->
+//                                    if (wayNode.nodeId == entity.id) {
+//                                        wayNode.latitude = roundToFiveDecimals(entity.latitude)
+//                                        wayNode.longitude = roundToFiveDecimals(entity.longitude)
+//                                    }
+//                                }
+//                            }
+                        }
+
+                        in roadSet -> {
+                            nodes[entity.id] = Pair(
+                                roundToFiveDecimals(entity.latitude),
+                                roundToFiveDecimals(entity.longitude)
+                            )
+//                            globalRoadParts.forEach { roadPart ->
+//                                roadPart.wayNodes.forEach { wayNode ->
+//                                    if (wayNode.nodeId == entity.id) {
+//                                        wayNode.latitude = roundToFiveDecimals(entity.latitude)
+//                                        wayNode.longitude = roundToFiveDecimals(entity.longitude)
+//                                    }
+//                                }
+//                            }
+                        }
+                    }
+
+
+//                    if (entity.id !in existingNodes) {
+//                        nodes.add(
+//                            Triple(
+//                                entity.id,
+//                                roundToFiveDecimals(entity.latitude),
+//                                roundToFiveDecimals(entity.longitude)
+//                            )
+//                        )
+//                    }
+                }
             }
+
         }
 
         override fun close() {}
@@ -62,17 +106,30 @@ private fun createOsmSink(connection: Connection, requiredNodeIds: MutableSet<Lo
     }
 }
 
-private fun insertNode(connection: Connection, node: Node) {
-    connection.prepareStatement(
-        "INSERT INTO nodes (id, latitude, longitude) VALUES (?, ?, ?)"
-    ).use { statement ->
-        statement.setLong(1, node.id)
-        statement.setDouble(2, roundToFiveDecimals(node.latitude))
-        statement.setDouble(3, roundToFiveDecimals(node.longitude))
-        statement.executeUpdate()
+fun insertNodeInRoads() {
+    globalRoadConnected.forEach { road ->
+        road.wayNodes.forEach { wayNode ->
+            val node = nodes[wayNode.nodeId]
+            if (node != null) {
+                wayNode.latitude = node.first
+                wayNode.longitude = node.second
+            }
+        }
     }
 }
 
-private fun roundToFiveDecimals(value: Double): Double {
+fun insertNodePlaces() {
+    globalPlacesMulti.forEach { place ->
+        place.wayNodes.forEach { wayNode ->
+            val node = nodes[wayNode.nodeId]
+            if (node != null) {
+                wayNode.latitude = node.first
+                wayNode.longitude = node.second
+            }
+        }
+    }
+}
+
+fun roundToFiveDecimals(value: Double): Double {
     return String.format(Locale.US, "%.5f", value).toDouble()
 }
