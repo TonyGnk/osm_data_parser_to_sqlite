@@ -11,9 +11,19 @@ fun createTables(dbFilePath: String) {
         CREATE TABLE way_nodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
             way_id INTEGER NOT NULL,
-            latitude INTEGER NOT NULL,
-            longitude INTEGER NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
             sequence INTEGER NOT NULL
+        )
+    """
+    )
+
+    statement.executeUpdate(
+        """
+        CREATE TABLE categories (
+            id INTEGER PRIMARY KEY NOT NULL,
+            en_name TEXT NOT NULL,
+            el_name TEXT NOT NULL
         )
     """
     )
@@ -36,9 +46,10 @@ fun createTables(dbFilePath: String) {
             en_name TEXT,
             address_number INTEGER,
             road_id INTEGER,
-            latitude INTEGER NOT NULL,
-            longitude INTEGER NOT NULL,
-            category INTEGER NOT NULL
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            category INTEGER NOT NULL,
+            FOREIGN KEY (category) REFERENCES categories(id)
         )
     """
     )
@@ -51,7 +62,8 @@ fun createTables(dbFilePath: String) {
             en_name TEXT,
             address_number INTEGER,
             road_id INTEGER,
-            category INTEGER NOT NULL
+            category INTEGER NOT NULL,
+            FOREIGN KEY (category) REFERENCES categories(id)
         )
     """
     )

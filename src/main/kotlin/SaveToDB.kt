@@ -1,3 +1,4 @@
+import parser.places.policies.possiblePlaceCategoriesValuesMap
 import utils.setIntOrNull
 import utils.setLongOrNull
 import utils.setStringOrNull
@@ -24,6 +25,9 @@ fun saveToDB(dbPath: String) {
         "INSERT INTO places_multi " +
                 "(way_id, el_name, en_name, address_number, road_id, category) " +
                 "VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    val saveToCategoriesStmt = sql.prepareStatement(
+        "INSERT INTO categories (id, en_name, el_name) VALUES (?, ?, ?)"
     )
 
     globalRoadConnected.forEach { road ->
@@ -60,17 +64,34 @@ fun saveToDB(dbPath: String) {
         saveToPlacesMultiStmt.setLongOrNull(5, place.roadWayId)
         saveToPlacesMultiStmt.setInt(6, place.category)
         saveToPlacesMultiStmt.addBatch()
+
+        place.wayNodes.forEach { node ->
+            saveToWayNodesStmt.setLong(1, place.wayId)
+            saveToWayNodesStmt.setDouble(2, node.latitude)
+            saveToWayNodesStmt.setDouble(3, node.longitude)
+            saveToWayNodesStmt.setInt(4, node.sequence)
+            saveToWayNodesStmt.addBatch()
+        }
+    }
+
+    possiblePlaceCategoriesValuesMap.forEach { (name, id) ->
+        saveToCategoriesStmt.setInt(1, id)
+        saveToCategoriesStmt.setString(2, name)
+        saveToCategoriesStmt.setString(3, name)
+        saveToCategoriesStmt.addBatch()
     }
 
     saveToRoadsStmt.executeBatch()
     saveToWayNodesStmt.executeBatch()
     saveToPlacesSingleStmt.executeBatch()
     saveToPlacesMultiStmt.executeBatch()
+    saveToCategoriesStmt.executeBatch()
 
     saveToRoadsStmt.close()
     saveToWayNodesStmt.close()
     saveToPlacesSingleStmt.close()
     saveToPlacesMultiStmt.close()
+    saveToCategoriesStmt.close()
 
     sql.commit()
     sql.autoCommit = true

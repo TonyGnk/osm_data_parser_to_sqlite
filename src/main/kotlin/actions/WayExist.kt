@@ -30,12 +30,9 @@ fun getTheIdOfTheRoadL() {
         }
     }
 
-    //println("\n\n\n\nglobalPlacesMulti size: ${globalPlacesMulti.size}")
     globalPlacesMulti.forEachIndexed { index, place ->
         val progress = (index + 1) * 100 / globalPlacesMulti.size
         print("\rAddress to Road...2...$progress%")
-
-        //print("PlaceInfo: ${place.elName}, ${place.enName}, ${place.elAddress}, ${place.enAddress}, ${place.category}")
 
         val nodes: List<Pair<Double, Double>?> = place.wayNodes.map { nodes[it.nodeId] }
         val nonNullNodes = nodes.filterNotNull()
@@ -52,7 +49,6 @@ fun getTheIdOfTheRoadL() {
                 lon = avLon,
                 roads = roads
             )
-
 
             else -> findClosestRoadFromAll(
                 lat = avLat,

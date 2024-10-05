@@ -8,39 +8,36 @@ import java.io.File
 
 fun main() {
 
-    val osmName = "mapFirstKoinotita" //"mapFirstKoinotita"
+    val osmName = "mapFirstKoinotita"
 
     val osmPath = "src/main/resources/$osmName.osm"
     val dbPath = "output/${osmName}.sqlite"
     if (File(dbPath).exists()) File(dbPath).delete()
 
-    // 1. Create the tables
-    createTables(dbPath)
+    val tasks = listOf(
 
-    val start = System.currentTimeMillis()
-    parseOsmL(osmPath = osmPath)
-    val end = System.currentTimeMillis()
-    println("Time spent: ${end - start} ms\n")
+        { parseOsmL(osmPath) },
+        { parseOsmForCoordinates(osmPath) },
+        { getTheIdOfTheRoadL() },
+        { connectTheRoads() },
+        { insertNodePlaces() },
+        { insertNodeInRoads() },
 
-    val start2 = System.currentTimeMillis()
-    parseOsmForCoordinates(osmPath)
-    val end2 = System.currentTimeMillis()
-    println("Time spent: ${end2 - start2} ms\n")
+        // SQLite
+        { createTables(dbPath) },
+        { saveToDB(dbPath) }
+    )
 
-
-    val start3 = System.currentTimeMillis()
-    getTheIdOfTheRoadL()
-    val end3 = System.currentTimeMillis()
-    println("Time spent: ${end3 - start3} ms\n")
-
-    val start4 = System.currentTimeMillis()
-    connectTheRoads()
-    val end4 = System.currentTimeMillis()
-    println("Time spent: ${end4 - start4} ms\n")
-
-    insertNodePlaces()
-    insertNodeInRoads()
+    tasks.forEach { task ->
+        startWithTime(task)
+    }
+}
 
 
-    saveToDB(dbPath)
+private fun startWithTime(function: () -> Unit) {
+    val startTime = System.currentTimeMillis()
+    function()
+    val endTime = System.currentTimeMillis()
+
+    println("Time spent:  ${endTime - startTime} ms\n")
 }

@@ -134,9 +134,7 @@ fun handleRoadsL(
 }
 
 
-fun insertMultiPlaceL(
-    way: Way,
-) {
+fun insertMultiPlaceL(way: Way) {
     val names = way.tags.getName()
     val elName = names.first
     val enName = names.second
@@ -161,8 +159,8 @@ fun insertMultiPlaceL(
                     wayId = way.id,
                     nodeId = wayNode.nodeId,
                     sequence = sequence,
-                    latitude = roundToFiveDecimals(wayNode.latitude),
-                    longitude = roundToFiveDecimals(wayNode.longitude)
+                    latitude = roundToFiveDecimals(wayNode.latitude), // ALWAYS 0.0
+                    longitude = roundToFiveDecimals(wayNode.longitude) // ALWAYS 0.0
                 )
             }.toSet(),
             category = category

@@ -3,6 +3,11 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+# Ignore all the files in /output directory
+output/
+#Ignore all the files in src/main/resources directory
+!**/src/main/resources/
+
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
