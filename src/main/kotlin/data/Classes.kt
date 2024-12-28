@@ -44,11 +44,11 @@ data class Glass(
     val subTitleEl: String?,
     val subTitleEn: String?,
     val id: String,
-    val category: String?
+    val category: String?,
 )
 
 
-data class LocationGlass(
+data class Coordinate(
     val id: Long,
     val latitude: Double,
     val longitude: Double,
@@ -59,4 +59,11 @@ data class RoadGlass(
     val latitude: Double,
     val longitude: Double,
     val sequence: Int,
+)
+
+data class Suburb(
+    val titleEl: String?,
+    val titleEn: String?,
+    val id: String,
+    val category: String?
 )

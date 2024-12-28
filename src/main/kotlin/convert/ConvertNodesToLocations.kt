@@ -1,28 +1,27 @@
 package convert
 
 import BATCH_SIZE
-import actions.findClosestRoadFromAll
-import actions.findClosestRoadId
+import actions.calculateDistance
 import actions.findClosestRoadNameFromAll
-import actions.findRoadsWithSameName
 import data.Glass
-import data.Location
-import data.LocationGlass
+import data.Coordinate
+import data.Suburb
+import data.WayNode
 import data.fullNodesMap
 import data.globalGlassList
-import data.globalLocationGlassList
+import data.globalCoordinateList
+import data.globalSuburbsList
 import data.specialSubCategoriesAndTranslations
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag
 import utils.getAddress
 import utils.getAddressNumber
 import utils.getCategory
-import utils.getCategoryId
 import utils.getName
 import utils.roundToFiveDecimals
 
 fun convertNodesToLocations() {
     val glassBatch = mutableListOf<Glass>()
-    val locationBatch = mutableListOf<LocationGlass>()
+    val locationBatch = mutableListOf<Coordinate>()
     val previousSize = globalGlassList.size
     print("\nNodes to locations...")
 
@@ -35,7 +34,7 @@ fun convertNodesToLocations() {
         //locationBatch.add(location)
 
         val pair = findLocationGlass(
-            idTypeIsNode = true, node.id, tags, node.latitude, node.longitude
+            node.id, tags, node.latitude, node.longitude
         )
         if (pair != null) {
             glassBatch.add(pair.first)
@@ -43,7 +42,7 @@ fun convertNodesToLocations() {
         }
 
         if (locationBatch.size >= BATCH_SIZE) {
-            globalLocationGlassList.addAll(locationBatch)
+            globalCoordinateList.addAll(locationBatch)
             globalGlassList.addAll(glassBatch)
             locationBatch.clear()
             glassBatch.clear()
@@ -55,7 +54,7 @@ fun convertNodesToLocations() {
     }
 
     if (locationBatch.isNotEmpty()) {
-        globalLocationGlassList.addAll(locationBatch)
+        globalCoordinateList.addAll(locationBatch)
         globalGlassList.addAll(glassBatch)
     }
 
@@ -98,12 +97,11 @@ fun convertNodesToLocations() {
 //}
 
 fun findLocationGlass(
-    idTypeIsNode: Boolean,
     id: Long,
     tags: MutableCollection<Tag>,
     latitude: Double,
     longitude: Double
-): Pair<Glass, LocationGlass>? {
+): Pair<Glass, Coordinate>? {
     val addresses = tags.getAddress()
     val category = tags.getCategory()
 
@@ -154,28 +152,29 @@ fun findLocationGlass(
     //2 categories: Businesses and Localities. Is Locality if the names are blank
     val isLocality = elName == null && enName == null
 
-    val locationIdFix = if (idTypeIsNode) 1 else 2
-    val locationId = "$locationIdFix$id".toLong()
-    val glassId = "L$locationId"
+    val glassId = "L$id"
 
-    val glass = if (isLocality) Glass(
-        id = glassId,
-        titleEl = elAddressG,
-        titleEn = enAddressG,
-        subTitleEl = null, //TODO Add close regions
-        subTitleEn = null,
-        category = category
-    ) else Glass(
+    val glass = if (isLocality) {
+        val suburb = findClosestSuburb(latitude, longitude)
+        Glass(
+            id = glassId,
+            titleEl = elAddressG,
+            titleEn = enAddressG,
+            subTitleEl = suburb?.titleEl,
+            subTitleEn = suburb?.titleEn,
+            category = category,
+        )
+    } else Glass(
         id = glassId,
         titleEl = elName,
         titleEn = enName,
         subTitleEl = elAddressG,
         subTitleEn = enAddressG,
-        category = category
+        category = category,
     )
 
-    val location = LocationGlass(
-        id = locationId,
+    val location = Coordinate(
+        id = id,
         latitude = roundToFiveDecimals(latitude),
         longitude = roundToFiveDecimals(longitude)
     )
@@ -193,4 +192,38 @@ fun findLocationGlass(
 //        category = category
 //    )
     return Pair(glass, location)
+}
+
+
+private fun findClosestSuburb(latitude: Double, longitude: Double): Suburb? {
+    // Map each suburb to its corresponding coordinate
+    val suburbsMap: Map<Suburb, Coordinate?> = globalSuburbsList.associateWith { suburb ->
+        globalCoordinateList.firstOrNull { coordinate ->
+            coordinate.id == suburb.id.toLong()
+        }
+    }
+
+    // Initialize variables to track the closest suburb and the shortest distance found
+    var closestSuburb: Suburb? = null
+    val maxDistance = 500.0 // 1.5 km in meters
+    var shortestDistance = Double.MAX_VALUE
+
+    // Iterate over each suburb and its coordinate
+    for ((suburb, coordinate) in suburbsMap) {
+        // Ensure the coordinate is not null
+        if (coordinate != null) {
+            // Calculate the distance between the way node and the suburb's coordinate
+            val distance = calculateDistance(
+                latitude, longitude,
+                coordinate.latitude, coordinate.longitude
+            )
+            // Check if the distance is within 1.5 km and is shorter than the current shortest distance
+            if (distance <= maxDistance && distance < shortestDistance) {
+                shortestDistance = distance
+                closestSuburb = suburb
+            }
+        }
+    }
+    // Return the closest suburb found within 1.5 km, or null if none was found
+    return closestSuburb
 }

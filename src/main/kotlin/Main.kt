@@ -1,20 +1,23 @@
 import actions.connectRoadParts
 import actions.convertRoadPartsToRoads
+import actions.removeDuplicateSuburbs
 import convert.convertNodesToLocations
+import convert.convertNodesToSuburbs
 import convert.convertWaysToLocations
 import convert.convertWaysToRoads
+import convert.convertWaysToSuburb
 import data.globalGlassList
-import data.globalLocationGlassList
+import data.globalCoordinateList
 import data.globalRoadGlassList
 import kotlinx.coroutines.runBlocking
-import sql.createTables2
+import sql.createTables
 import sql.saveToDatabase
 
 const val BATCH_SIZE = 1000
 
 fun main() {
 
-    val osmName = "smallFile"//"largeFile"
+    val osmName = "largeFile"// "smallFile"//"largeFile"
 
     val osmPath = "src/main/resources/$osmName.osm"
     val dbPath = "output/${osmName}.sqlite"
@@ -24,6 +27,10 @@ fun main() {
 
     //Now we have a 2 lists of nodes and ways
     val tasks = listOf(
+        { convertWaysToSuburb() },
+        { convertNodesToSuburbs() },
+        { removeDuplicateSuburbs() },
+
         { convertWaysToRoads() },
 
         { connectRoadParts() },
@@ -33,11 +40,12 @@ fun main() {
         { convertNodesToLocations() },
 
         //SQLite
-        { createTables2(dbPath) },
+        { createTables(dbPath) },
         {
             println("Glass count: ${globalGlassList.size}")
-            println("Locations count: ${globalLocationGlassList.size}")
+            println("Locations count: ${globalCoordinateList.size}")
             println("Roads count: ${globalRoadGlassList.size}")
+            println("Suburbs count: ${globalCoordinateList.size}")
         },
         { saveToDatabase(dbPath) }
     )

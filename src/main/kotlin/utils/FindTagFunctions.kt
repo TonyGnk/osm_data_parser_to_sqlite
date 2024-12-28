@@ -1,9 +1,9 @@
 package utils
 
 import data.locationCategories
-import data.locationSubCategories
 import data.locationSubCategoriesList
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag
+import java.awt.SystemColor.text
 
 
 fun MutableCollection<Tag>.findTagWithName(
@@ -80,34 +80,46 @@ fun MutableCollection<Tag>.getAddressNumber(): Int? {
 }
 
 
-fun MutableCollection<Tag>.getCategoryId(addresses: Pair<String?, String?>): Int? {
-    // For address return 0
-
-    var categoryId: Int? = null
-    var category = this.findTagWithName(locationCategories)
-
-    // 1. BLANK : If the category is blank
-    if (category != null && category.isBlank()) {
-        category = null
-    }
-
-    // 2. ToMAP : Convert the category to the corresponding value
-    if (category != null) {
-        categoryId = locationSubCategories[category]
-    }
-
-    if (
-        categoryId == null && (addresses.first != null || addresses.second != null)
-    ) {
-        categoryId = 0
-    }
-
-    return categoryId
-}
+//fun MutableCollection<Tag>.getCategoryId(addresses: Pair<String?, String?>): Int? {
+//    // For address return 0
+//
+//    var categoryId: Int? = null
+//    var category = this.findTagWithName(locationCategories)
+//
+//    // 1. BLANK : If the category is blank
+//    if (category != null && category.isBlank()) {
+//        category = null
+//    }
+//
+//    // 2. ToMAP : Convert the category to the corresponding value
+//    if (category != null) {
+//        categoryId = locationSubCategories[category]
+//    }
+//
+//    if (
+//        categoryId == null && (addresses.first != null || addresses.second != null)
+//    ) {
+//        categoryId = 0
+//    }
+//
+//    return categoryId
+//}
 
 fun MutableCollection<Tag>.getCategory(): String? {
     val category = this.findTagWithName(locationCategories) ?: return null
     if (category.isBlank()) return null
 
     return if (category in locationSubCategoriesList) category else null
+}
+
+fun MutableCollection<Tag>.getCategorySuburb(): String? {
+    val category = this.findTagWithName(listOf("place")) ?: return null
+    if (category.isBlank()) return null
+
+    return if (category !in listOf("locality", "city_block", "plot")) category else null
+}
+
+fun String?.capitalizeFirstLetter(): String? {
+    if (this == null) return null
+    return this.replaceFirstChar { it.uppercase() }
 }

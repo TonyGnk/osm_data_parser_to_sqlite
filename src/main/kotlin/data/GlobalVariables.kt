@@ -14,5 +14,6 @@ val globalLocationsList: MutableList<Location> = mutableListOf()
 //____
 
 val globalGlassList: MutableList<Glass> = mutableListOf()
-val globalLocationGlassList: MutableList<LocationGlass> = mutableListOf()
+val globalCoordinateList: MutableList<Coordinate> = mutableListOf()
 val globalRoadGlassList: MutableList<RoadGlass> = mutableListOf()
+val globalSuburbsList: MutableList<Suburb> = mutableListOf()

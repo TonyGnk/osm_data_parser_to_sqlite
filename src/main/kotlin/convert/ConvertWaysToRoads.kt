@@ -8,6 +8,7 @@ import data.fullWays
 import data.globalRoadParts
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag
 import org.openstreetmap.osmosis.core.domain.v0_6.Way
+import utils.capitalizeFirstLetter
 import utils.findTagWithName
 import utils.getName
 import utils.roundToFiveDecimals
