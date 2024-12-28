@@ -2,6 +2,7 @@ package convert
 
 import data.RoadPart
 import data.WayNode
+import data.allowedRoads
 import data.fullNodesMap
 import data.fullWays
 import data.globalRoadParts
@@ -15,7 +16,7 @@ fun convertWaysToRoads() {
     print("Ways to roads...")
     val iterator = fullWays.iterator()
     iterator.asSequence()
-        .filter { way -> way.tags.isNotEmpty() && isRoad(way.tags) }
+        .filter { way -> way.tags.isNotEmpty() && isGoodRoad(way.tags) }
         .forEach { way ->
             handleRoadsL(way)
             iterator.remove()
@@ -51,6 +52,12 @@ fun handleRoadsL(way: Way) {
 }
 
 
-private fun isRoad(tags: MutableCollection<Tag>): Boolean {
-    return tags.findTagWithName(listOf("highway")) != null
+fun isRoad(tags: MutableCollection<Tag>): Boolean {
+    val category = tags.findTagWithName(listOf("highway"))
+    return category != null
+}
+
+fun isGoodRoad(tags: MutableCollection<Tag>): Boolean {
+    val category = tags.findTagWithName(listOf("highway")) ?: return false
+    return category in allowedRoads
 }

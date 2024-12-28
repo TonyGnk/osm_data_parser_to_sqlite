@@ -7,7 +7,7 @@ import data.globalRoadConnected
 import data.globalRoadParts
 
 
-fun connectTheRoads() {
+fun connectRoadParts() {
     print("Connect roads...")
 
     val roads = globalRoadParts.toMutableSet()

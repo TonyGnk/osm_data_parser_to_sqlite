@@ -64,3 +64,52 @@ fun createTables(dbPath: String) {
     sql.autoCommit = true
     sql.close()
 }
+
+fun createTables2(dbPath: String) {
+    if (File(dbPath).exists()) File(dbPath).delete()
+    println("Creating tables...")
+    val sql: Connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
+    sql.autoCommit = false
+    val statement = sql.createStatement()
+
+    statement.executeUpdate(
+        """
+        CREATE TABLE way_nodes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            way_id INTEGER NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL,
+            sequence INTEGER NOT NULL
+        )
+    """
+    )
+
+    statement.executeUpdate(
+        """
+        CREATE TABLE locations (
+            id INTEGER PRIMARY KEY NOT NULL,
+            latitude REAL NOT NULL,
+            longitude REAL NOT NULL
+        )
+    """
+    )
+
+    statement.executeUpdate(
+        """
+        CREATE TABLE pois (
+            id TEXT PRIMARY KEY NOT NULL,
+            title_el TEXT,
+            title_en TEXT,
+            subtitle_el TEXT,
+            subtitle_en TEXT,
+            category TEXT,
+            frequency INTEGER NOT NULL
+        )
+    """
+    )
+
+    statement.close()
+    sql.commit()
+    sql.autoCommit = true
+    sql.close()
+}

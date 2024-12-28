@@ -10,3 +10,9 @@ val globalRoadConnected: MutableList<RoadPart> = mutableListOf()
 val fullNodesMap: MutableMap<Long, Node> = ConcurrentHashMap<Long, Node>()
 val fullWays: MutableList<Way> = Collections.synchronizedList(mutableListOf<Way>())
 val globalLocationsList: MutableList<Location> = mutableListOf()
+
+//____
+
+val globalGlassList: MutableList<Glass> = mutableListOf()
+val globalLocationGlassList: MutableList<LocationGlass> = mutableListOf()
+val globalRoadGlassList: MutableList<RoadGlass> = mutableListOf()

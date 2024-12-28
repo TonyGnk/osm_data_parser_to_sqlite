@@ -2,6 +2,7 @@ package utils
 
 import data.locationCategories
 import data.locationSubCategories
+import data.locationSubCategoriesList
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag
 
 
@@ -102,4 +103,11 @@ fun MutableCollection<Tag>.getCategoryId(addresses: Pair<String?, String?>): Int
     }
 
     return categoryId
+}
+
+fun MutableCollection<Tag>.getCategory(): String? {
+    val category = this.findTagWithName(locationCategories) ?: return null
+    if (category.isBlank()) return null
+
+    return if (category in locationSubCategoriesList) category else null
 }

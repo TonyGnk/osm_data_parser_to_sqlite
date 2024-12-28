@@ -1,11 +1,11 @@
 package sql
 
+import data.globalGlassList
+import data.globalLocationGlassList
 import data.globalLocationsList
 import data.globalRoadConnected
-import data.locationSubCategories
+import data.globalRoadGlassList
 import utils.setIntOrNull
-import utils.setLongOrNull
-import utils.setStringOrNull
 import java.sql.Connection
 import java.sql.DriverManager
 
@@ -13,71 +13,71 @@ fun saveToDatabase(dbPath: String) {
     val sql: Connection = DriverManager.getConnection("jdbc:sqlite:$dbPath")
     sql.autoCommit = false
 
-    val saveToRoadsStmt = sql.prepareStatement(
-        "INSERT INTO roads (way_id, el_Name, en_Name) VALUES (?, ?, ?)"
-    )
-    val saveToWayNodesStmt = sql.prepareStatement(
-        "INSERT INTO way_nodes (way_id, latitude, longitude, sequence) VALUES (?, ?, ?, ?)"
-    )
-    val saveToPlacesStmt = sql.prepareStatement(
-        "INSERT INTO places_single " +
-                "(el_name, en_name, address_number, road_id, latitude, longitude, category) " +
+    val saveGlassStmt = sql.prepareStatement(
+        "INSERT INTO pois (id, title_el, title_en, subtitle_el, subtitle_en, category, frequency) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)"
     )
-    val saveToCategoriesStmt = sql.prepareStatement(
-        "INSERT INTO categories (id, en_name, el_name) VALUES (?, ?, ?)"
+    val saveWayNodesStmt = sql.prepareStatement(
+        "INSERT INTO way_nodes (way_id, latitude, longitude, sequence) VALUES (?, ?, ?, ?)"
     )
+    val saveLocationsStmt = sql.prepareStatement(
+        "INSERT INTO locations " +
+                "(id, latitude, longitude)" +
+                "VALUES (?, ?, ?)"
+    )
+//    val saveToCategoriesStmt = sql.prepareStatement(
+//        "INSERT INTO categories (id, en_name, el_name) VALUES (?, ?, ?)"
+//    )
 
     //Print the size of each set
     print("Saving... ${globalRoadConnected.size} roads, ${globalLocationsList.size} places... ")
 
 
-    globalRoadConnected.forEach { road ->
-        saveToRoadsStmt.setLong(1, road.wayId)
-        saveToRoadsStmt.setStringOrNull(2, road.elName)
-        saveToRoadsStmt.setStringOrNull(3, road.enName)
-        saveToRoadsStmt.addBatch()
+    //Find Waynodes with not unique sequence
 
-        road.wayNodes.forEach { node ->
-            saveToWayNodesStmt.setLong(1, road.wayId)
-            saveToWayNodesStmt.setDouble(2, node.latitude)
-            saveToWayNodesStmt.setDouble(3, node.longitude)
-            saveToWayNodesStmt.setInt(4, node.sequence)
-            saveToWayNodesStmt.addBatch()
-        }
+    globalGlassList.forEach { glass ->
+        saveGlassStmt.setString(1, glass.id)
+        saveGlassStmt.setString(2, glass.titleEl)
+        saveGlassStmt.setString(3, glass.titleEn)
+        saveGlassStmt.setString(4, glass.subTitleEl)
+        saveGlassStmt.setString(5, glass.subTitleEn)
+        saveGlassStmt.setString(6, glass.category)
+        saveGlassStmt.setIntOrNull(7, 0)
+        saveGlassStmt.addBatch()
     }
 
-    globalLocationsList.forEach { place ->
-        saveToPlacesStmt.setStringOrNull(1, place.elName)
-        saveToPlacesStmt.setStringOrNull(2, place.enName)
-        saveToPlacesStmt.setIntOrNull(3, place.addressNumber)
-        saveToPlacesStmt.setLongOrNull(4, place.wayId)
-        saveToPlacesStmt.setDouble(5, place.latitude)
-        saveToPlacesStmt.setDouble(6, place.longitude)
-        saveToPlacesStmt.setInt(7, place.category)
-        saveToPlacesStmt.addBatch()
+    globalLocationGlassList.forEach { location ->
+        saveLocationsStmt.setLong(1, location.id)
+        saveLocationsStmt.setDouble(2, location.latitude)
+        saveLocationsStmt.setDouble(3, location.longitude)
+        saveLocationsStmt.addBatch()
     }
 
-    locationSubCategories.forEach { (name, id) ->
-        saveToCategoriesStmt.setInt(1, id)
-        saveToCategoriesStmt.setString(2, name)
-        saveToCategoriesStmt.setString(3, name)
-        saveToCategoriesStmt.addBatch()
+    globalRoadGlassList.forEach { roadGlass ->
+        saveWayNodesStmt.setLong(1, roadGlass.wayId)
+        saveWayNodesStmt.setDouble(2, roadGlass.latitude)
+        saveWayNodesStmt.setDouble(3, roadGlass.longitude)
+        saveWayNodesStmt.setInt(4, roadGlass.sequence)
+        saveWayNodesStmt.addBatch()
     }
 
-    saveToRoadsStmt.executeBatch()
-    saveToWayNodesStmt.executeBatch()
-    saveToPlacesStmt.executeBatch()
-    saveToCategoriesStmt.executeBatch()
+    saveGlassStmt.executeBatch()
+    saveWayNodesStmt.executeBatch()
+    saveLocationsStmt.executeBatch()
+//    saveToCategoriesStmt.executeBatch()
 
-    saveToRoadsStmt.close()
-    saveToWayNodesStmt.close()
-    saveToPlacesStmt.close()
-    saveToCategoriesStmt.close()
+    saveGlassStmt.close()
+    saveWayNodesStmt.close()
+    saveLocationsStmt.close()
+//    saveToCategoriesStmt.close()
 
     sql.commit()
     sql.autoCommit = true
     sql.createStatement().execute("VACUUM")
     sql.close()
-    println("\rSaving...${globalRoadConnected.size} roads, ${globalLocationsList.size} places...OK ")
+//    println("\rSaving...${globalRoadConnected.size} roads, ${globalLocationsList.size} places...OK ")
+    println(
+        "\rSaving...${globalGlassList.size} glass, ${globalLocationGlassList.size} locations, ${globalRoadGlassList.size} roads...OK "
+    )
+
 }

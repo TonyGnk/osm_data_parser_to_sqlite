@@ -34,3 +34,29 @@ data class RoadSet(
     val wayOldIds: MutableList<Long> = mutableListOf(),
     val wayNewIds: MutableList<WayNode> = mutableListOf(),
 )
+
+
+//___
+
+data class Glass(
+    val titleEl: String?,
+    val titleEn: String?,
+    val subTitleEl: String?,
+    val subTitleEn: String?,
+    val id: String,
+    val category: String?
+)
+
+
+data class LocationGlass(
+    val id: Long,
+    val latitude: Double,
+    val longitude: Double,
+)
+
+data class RoadGlass(
+    val wayId: Long,
+    val latitude: Double,
+    val longitude: Double,
+    val sequence: Int,
+)

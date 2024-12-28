@@ -1,9 +1,13 @@
-import actions.connectTheRoads
+import actions.connectRoadParts
+import actions.convertRoadPartsToRoads
 import convert.convertNodesToLocations
 import convert.convertWaysToLocations
 import convert.convertWaysToRoads
+import data.globalGlassList
+import data.globalLocationGlassList
+import data.globalRoadGlassList
 import kotlinx.coroutines.runBlocking
-import sql.createTables
+import sql.createTables2
 import sql.saveToDatabase
 
 const val BATCH_SIZE = 1000
@@ -18,15 +22,23 @@ fun main() {
 
     runBlocking { parseOsmData(osmPath) }
 
+    //Now we have a 2 lists of nodes and ways
     val tasks = listOf(
         { convertWaysToRoads() },
+
+        { connectRoadParts() },
+        { convertRoadPartsToRoads() },
+
         { convertWaysToLocations() },
         { convertNodesToLocations() },
 
-        { connectTheRoads() },
-
-        // SQLite
-        { createTables(dbPath) },
+        //SQLite
+        { createTables2(dbPath) },
+        {
+            println("Glass count: ${globalGlassList.size}")
+            println("Locations count: ${globalLocationGlassList.size}")
+            println("Roads count: ${globalRoadGlassList.size}")
+        },
         { saveToDatabase(dbPath) }
     )
 

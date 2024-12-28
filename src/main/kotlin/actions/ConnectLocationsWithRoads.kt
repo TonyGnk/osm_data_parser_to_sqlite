@@ -1,7 +1,10 @@
 package actions
 
+import data.RoadGlass
 import data.RoadPart
 import data.fullNodesMap
+import data.globalGlassList
+import data.globalRoadGlassList
 import data.globalRoadParts
 import org.openstreetmap.osmosis.core.domain.v0_6.Node
 import java.util.concurrent.ConcurrentHashMap
@@ -51,9 +54,49 @@ fun findClosestRoadFromAll(lat: Double, lon: Double): Long? {
         ?.first
 }
 
+fun findClosestRoadNameFromAll(lat: Double, lon: Double): Pair<String?, String?> {
+    val nearbyRoads = globalRoadGlassList
+        .groupBy { it.wayId }
+        .filter { group ->
+            val firstWay = group.value.first()
+            firstWay.let {
+                abs(it.latitude - lat) <= 0.007 && abs(it.longitude - lon) <= 0.007
+            }
+        }
+        .filter { group ->
+            group.value.any { wayNode ->
+                wayNode.let { node ->
+                    abs(node.latitude - lat) <= 0.005 && abs(node.longitude - lon) <= 0.005
+                }
+            }
+        }
+
+    //Filter the closest way node
+    val idOfTheClosestWay = nearbyRoads.values
+        .flatMap { road ->
+            road.map { wayNode ->
+                wayNode to distanceSquared(lat, lon, wayNode)
+            }
+        }
+        .minByOrNull { (_, distance) -> distance }
+        ?.first
+
+
+    val item = globalGlassList.find { it.id == "R${idOfTheClosestWay?.wayId}" }
+    val nameEl = item?.titleEl
+    val nameEn = item?.titleEn
+    return Pair(nameEl, nameEn)
+}
+
 fun distanceSquared(lat1: Double, lon1: Double, node: Node): Double {
     val dLat = node.latitude - lat1
     val dLon = node.longitude - lon1
+    return dLat * dLat + dLon * dLon
+}
+
+fun distanceSquared(lat1: Double, lon1: Double, roadGlass: RoadGlass): Double {
+    val dLat = roadGlass.latitude - lat1
+    val dLon = roadGlass.longitude - lon1
     return dLat * dLat + dLon * dLon
 }
 
