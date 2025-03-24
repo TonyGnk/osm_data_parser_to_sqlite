@@ -8,6 +8,9 @@ import data.globalSuburbsList
 import org.openstreetmap.osmosis.core.domain.v0_6.Way
 import utils.getCategorySuburb
 
+/**
+ * Converts ways to locations and updates the global glass list and coordinate list.
+ */
 fun convertWaysToLocations() {
     print("Ways to locations...")
     val totalWays = fullWays.size
@@ -25,6 +28,11 @@ fun convertWaysToLocations() {
     println("\rWays to locations...OK : ${globalCoordinateList.size} locations")
 }
 
+/**
+ * Processes a way to extract location information and updates the global glass list and coordinate list.
+ *
+ * @param way The way to process.
+ */
 private fun processLocation(way: Way) {
     val coordinates = way.wayNodes
         .map { fullNodesMap[it.nodeId]!! }
@@ -45,6 +53,9 @@ private fun processLocation(way: Way) {
     }
 }
 
+/**
+ * Converts ways to suburbs and updates the global suburbs list and coordinate list.
+ */
 fun convertWaysToSuburb() {
     print("Ways to locations...")
     val totalWays = fullWays.size
@@ -62,6 +73,11 @@ fun convertWaysToSuburb() {
     println("\rWays to locations...OK : ${globalCoordinateList.size} locations")
 }
 
+/**
+ * Processes a way to extract suburb information and updates the global suburbs list and coordinate list.
+ *
+ * @param way The way to process.
+ */
 private fun processSuburb(way: Way) {
     val coordinates = way.wayNodes
         .map { fullNodesMap[it.nodeId]!! }

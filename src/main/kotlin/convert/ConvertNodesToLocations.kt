@@ -19,6 +19,9 @@ import utils.getCategory
 import utils.getName
 import utils.roundToFiveDecimals
 
+/**
+ * Converts nodes to locations and updates the global glass list and coordinate list.
+ */
 fun convertNodesToLocations() {
     val glassBatch = mutableListOf<Glass>()
     val locationBatch = mutableListOf<Coordinate>()
@@ -96,6 +99,15 @@ fun convertNodesToLocations() {
 //    )
 //}
 
+/**
+ * Finds the location glass and coordinate for a given node.
+ *
+ * @param id The ID of the node.
+ * @param tags The tags associated with the node.
+ * @param latitude The latitude of the node.
+ * @param longitude The longitude of the node.
+ * @return A pair containing the glass and coordinate, or null if no valid location is found.
+ */
 fun findLocationGlass(
     id: Long,
     tags: MutableCollection<Tag>,
@@ -194,7 +206,13 @@ fun findLocationGlass(
     return Pair(glass, location)
 }
 
-
+/**
+ * Finds the closest suburb to a given latitude and longitude.
+ *
+ * @param latitude The latitude of the point to find the closest suburb to.
+ * @param longitude The longitude of the point to find the closest suburb to.
+ * @return The closest suburb, or null if no suburb is found within the specified range.
+ */
 private fun findClosestSuburb(latitude: Double, longitude: Double): Suburb? {
     // Map each suburb to its corresponding coordinate
     val suburbsMap: Map<Suburb, Coordinate?> = globalSuburbsList.associateWith { suburb ->

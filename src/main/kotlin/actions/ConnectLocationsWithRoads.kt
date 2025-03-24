@@ -10,7 +10,14 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Node
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 
-
+/**
+ * Finds the closest road ID from a set of roads based on the given latitude and longitude.
+ *
+ * @param lat The latitude of the point to find the closest road to.
+ * @param lon The longitude of the point to find the closest road to.
+ * @param roads The set of roads to search for the closest road.
+ * @return The ID of the closest road, or null if no road is found within the specified range.
+ */
 fun findClosestRoadId(lat: Double, lon: Double, roads: Set<RoadPart>): Long? {
     return roads.asSequence()
         .filter { road ->
@@ -26,6 +33,13 @@ fun findClosestRoadId(lat: Double, lon: Double, roads: Set<RoadPart>): Long? {
         ?.wayId
 }
 
+/**
+ * Finds the closest road ID from all available roads based on the given latitude and longitude.
+ *
+ * @param lat The latitude of the point to find the closest road to.
+ * @param lon The longitude of the point to find the closest road to.
+ * @return The ID of the closest road, or null if no road is found within the specified range.
+ */
 fun findClosestRoadFromAll(lat: Double, lon: Double): Long? {
     val nearbyRoads = globalRoadParts.asSequence()
         .filter { road ->
@@ -54,6 +68,13 @@ fun findClosestRoadFromAll(lat: Double, lon: Double): Long? {
         ?.first
 }
 
+/**
+ * Finds the closest road name (both in Greek and English) from all available roads based on the given latitude and longitude.
+ *
+ * @param lat The latitude of the point to find the closest road name to.
+ * @param lon The longitude of the point to find the closest road name to.
+ * @return A pair containing the Greek and English names of the closest road, or null if no road is found within the specified range.
+ */
 fun findClosestRoadNameFromAll(lat: Double, lon: Double): Pair<String?, String?> {
     val nearbyRoads = globalRoadGlassList
         .groupBy { it.wayId }
@@ -88,12 +109,28 @@ fun findClosestRoadNameFromAll(lat: Double, lon: Double): Pair<String?, String?>
     return Pair(nameEl, nameEn)
 }
 
+/**
+ * Calculates the squared distance between a given point and a node.
+ *
+ * @param lat1 The latitude of the point.
+ * @param lon1 The longitude of the point.
+ * @param node The node to calculate the distance to.
+ * @return The squared distance between the point and the node.
+ */
 fun distanceSquared(lat1: Double, lon1: Double, node: Node): Double {
     val dLat = node.latitude - lat1
     val dLon = node.longitude - lon1
     return dLat * dLat + dLon * dLon
 }
 
+/**
+ * Calculates the squared distance between a given point and a road glass.
+ *
+ * @param lat1 The latitude of the point.
+ * @param lon1 The longitude of the point.
+ * @param roadGlass The road glass to calculate the distance to.
+ * @return The squared distance between the point and the road glass.
+ */
 fun distanceSquared(lat1: Double, lon1: Double, roadGlass: RoadGlass): Double {
     val dLat = roadGlass.latitude - lat1
     val dLon = roadGlass.longitude - lon1
@@ -101,6 +138,14 @@ fun distanceSquared(lat1: Double, lon1: Double, roadGlass: RoadGlass): Double {
 }
 
 private val roadNameCache = ConcurrentHashMap<String, Set<RoadPart>>()
+
+/**
+ * Finds roads with the same name (either in Greek or English) as the given addresses.
+ *
+ * @param elAddress The Greek address to search for.
+ * @param enAddress The English address to search for.
+ * @return A set of roads with the same name as the given addresses.
+ */
 fun findRoadsWithSameName(elAddress: String?, enAddress: String?): Set<RoadPart> {
     val elWords = elAddress?.split(" ")?.filter { it.length > 1 }?.toSet()
     val enWords = enAddress?.split(" ")?.filter { it.length > 1 }?.toSet()

@@ -15,7 +15,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-
+/**
+ * Converts road parts to roads and updates the global glass list and road glass list.
+ */
 fun convertRoadPartsToRoads() {
     val roadsParts = globalRoadConnected
 
@@ -45,21 +47,11 @@ fun convertRoadPartsToRoads() {
     }
 }
 
-/*
-public final data class WayNode(
-    val wayId: Long,
-    val nodeId: Long,
-    val sequence: Int,
-    val latitude: Double,
-    val longitude: Double
-)
-data class Coordinate(
-    val id: Long,
-    val latitude: Double,
-    val longitude: Double,
-)
-
-Finds the closest suburb from all the way nodes of a road part
+/**
+ * Finds the closest suburb from all the way nodes of a road part.
+ *
+ * @param wayNodes The list of way nodes of the road part.
+ * @return The closest suburb, or null if no suburb is found within the specified range.
  */
 private fun findClosestSuburbFromAll(wayNodes: List<WayNode>): Suburb? {
     val suburbsMap: Map<Suburb, Coordinate?> = globalSuburbsList.associateWith {
@@ -96,6 +88,15 @@ private fun findClosestSuburbFromAll(wayNodes: List<WayNode>): Suburb? {
     return closestSuburb
 }
 
+/**
+ * Calculates the distance between two geographical points using the Haversine formula.
+ *
+ * @param lat1 The latitude of the first point.
+ * @param lon1 The longitude of the first point.
+ * @param lat2 The latitude of the second point.
+ * @param lon2 The longitude of the second point.
+ * @return The distance between the two points in meters.
+ */
 fun calculateDistance(
     lat1: Double, lon1: Double,
     lat2: Double, lon2: Double
