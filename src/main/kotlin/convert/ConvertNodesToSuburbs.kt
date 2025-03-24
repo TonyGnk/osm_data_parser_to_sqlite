@@ -18,6 +18,9 @@ import utils.getCategorySuburb
 import utils.getName
 import utils.roundToFiveDecimals
 
+/**
+ * Converts nodes to suburbs and updates the global suburbs list and coordinate list.
+ */
 fun convertNodesToSuburbs() {
     val suburbsBatch = mutableListOf<Suburb>()
     val locationBatch = mutableListOf<Coordinate>()
@@ -55,7 +58,15 @@ fun convertNodesToSuburbs() {
     println("\rNodes to suburbs...OK : ${globalSuburbsList.size} suburbs")
 }
 
-
+/**
+ * Finds the location suburb and coordinate for a given node.
+ *
+ * @param id The ID of the node.
+ * @param tags The tags associated with the node.
+ * @param latitude The latitude of the node.
+ * @param longitude The longitude of the node.
+ * @return A pair containing the suburb and coordinate, or null if no valid location is found.
+ */
 fun findLocationSuburb(
     id: Long,
     tags: MutableCollection<Tag>,

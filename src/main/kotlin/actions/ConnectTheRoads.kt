@@ -6,7 +6,10 @@ import data.globalLocationsList
 import data.globalRoadConnected
 import data.globalRoadParts
 
-
+/**
+ * Connects road parts with the same name into continuous road segments.
+ * Updates the globalRoadConnected list with the connected road parts.
+ */
 fun connectRoadParts() {
     print("Connect roads...")
 
@@ -50,7 +53,12 @@ fun connectRoadParts() {
     println("\rConnect roads...OK:  $size -> ${globalRoadConnected.size}")
 }
 
-
+/**
+ * Connects a set of road parts with the same name into continuous road segments.
+ *
+ * @param roadsWithSameName The list of road parts with the same name.
+ * @return A list of connected road sets.
+ */
 fun connectASet(roadsWithSameName: List<RoadPart>): List<RoadSet> {
     val sets: MutableList<RoadSet> = mutableListOf()
     val remainingRoads = roadsWithSameName.toMutableList()
@@ -65,6 +73,12 @@ fun connectASet(roadsWithSameName: List<RoadPart>): List<RoadSet> {
     return sets
 }
 
+/**
+ * Recursively connects nested road parts to a given road set.
+ *
+ * @param remainingRoads The list of remaining road parts to connect.
+ * @param set The road set to connect the road parts to.
+ */
 private fun connectNestedSets(
     remainingRoads: MutableList<RoadPart>, set: RoadSet
 ) {
@@ -95,7 +109,12 @@ private fun connectNestedSets(
     }
 }
 
-
+/**
+ * Creates a new road set from a given road part.
+ *
+ * @param road The road part to create the set from.
+ * @return The created road set.
+ */
 private fun createSet(road: RoadPart): RoadSet {
     return RoadSet(
         elName = road.elName,
@@ -105,7 +124,12 @@ private fun createSet(road: RoadPart): RoadSet {
     )
 }
 
-
+/**
+ * Adds a road part to the road set.
+ *
+ * @param addFront Whether to add the road part to the front or back of the set.
+ * @param road The road part to add.
+ */
 private fun RoadSet.add(
     addFront: Boolean, road: RoadPart
 ) {
